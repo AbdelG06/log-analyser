@@ -1,0 +1,17 @@
+[project]
+name = "projet-log-analyser"
+version = "0.1.0"
+description = "Analyseur de journaux Linux avec dashboard Matplotlib et stockage MySQL"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "matplotlib>=3.7",
+    "pymysql>=1.1",
+]
+
+[project.scripts]
+projet-log-analyser = "projet_log_analyser:main"
+
+[build-system]
+requires = ["uv_build>=0.13.3,<0.14.0"]
+build-backend = "uv_build"
