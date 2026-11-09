@@ -5,6 +5,7 @@ from typing import Dict, Iterator
 
 from storage.load_postgres import load
 from ingestion.logging_config import configure_logging
+from process.geolocation import enrich_database
 from process.parser import parse_line
 
 LOGGER = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ def run(data_dir: str = "data") -> None:
     ]
     LOGGER.info("Loading %d log files", len(paths))
     load(row for path in paths for row in _rows(path))
+    enrich_database()
 
 
 if __name__ == "__main__":
