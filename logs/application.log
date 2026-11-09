@@ -1,0 +1,16 @@
+2026-11-07 23:40:47,237 INFO ingestion.run_pipeline Loading 4 log files
+2026-11-07 23:40:47,945 WARNING process.parser Unrecognised log line in /Users/abdel_g/Desktop/ALL/1.python/Log_analyser/data/auth.log.2
+2026-11-07 23:40:47,946 WARNING process.parser Unrecognised log line in /Users/abdel_g/Desktop/ALL/1.python/Log_analyser/data/auth.log.2
+2026-11-07 23:40:47,946 WARNING process.parser Unrecognised log line in /Users/abdel_g/Desktop/ALL/1.python/Log_analyser/data/auth.log.2
+2026-11-07 23:42:26,305 INFO ingestion.run_pipeline Loading 4 log files
+2026-11-07 23:42:26,996 WARNING process.parser Unrecognised log line in /Users/abdel_g/Desktop/ALL/1.python/Log_analyser/data/auth.log.2
+2026-11-07 23:42:26,996 WARNING process.parser Unrecognised log line in /Users/abdel_g/Desktop/ALL/1.python/Log_analyser/data/auth.log.2
+2026-11-07 23:42:26,996 WARNING process.parser Unrecognised log line in /Users/abdel_g/Desktop/ALL/1.python/Log_analyser/data/auth.log.2
+2026-11-07 23:44:40,782 INFO ingestion.run_pipeline Loading 4 log files
+2026-11-07 23:44:41,468 WARNING process.parser Unrecognised log line in /Users/abdel_g/Desktop/ALL/1.python/Log_analyser/data/auth.log.2
+2026-11-07 23:44:41,469 WARNING process.parser Unrecognised log line in /Users/abdel_g/Desktop/ALL/1.python/Log_analyser/data/auth.log.2
+2026-11-07 23:44:41,469 WARNING process.parser Unrecognised log line in /Users/abdel_g/Desktop/ALL/1.python/Log_analyser/data/auth.log.2
+2026-11-08 00:11:52,895 INFO ingestion.run_pipeline Loading 4 log files
+2026-11-08 00:11:53,617 WARNING process.parser Unrecognised log line in /Users/abdel_g/Desktop/ALL/1.python/Log_analyser/data/auth.log.2
+2026-11-08 00:11:53,617 WARNING process.parser Unrecognised log line in /Users/abdel_g/Desktop/ALL/1.python/Log_analyser/data/auth.log.2
+2026-11-08 00:11:53,617 WARNING process.parser Unrecognised log line in /Users/abdel_g/Desktop/ALL/1.python/Log_analyser/data/auth.log.2
