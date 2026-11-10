@@ -3,31 +3,14 @@ import io
 import logging
 import os
 import subprocess
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, List
 
 import requests
 
 LOGGER = logging.getLogger(__name__)
-API_URL = "https://ipinfo.io/{ip}/json"
-REQUEST_TIMEOUT = 4
-MAX_WORKERS = 20
-
-
-def get_location(ip: str) -> Optional[str]:
-    """Return the country code reported by ipinfo.io for an IP address."""
-    try:
-        response = requests.get(API_URL.format(ip=ip), timeout=REQUEST_TIMEOUT)
-        response.raise_for_status()
-        country = response.json().get("country")
-    except (OSError, requests.RequestException, ValueError) as exc:
-        LOGGER.warning("Geolocation request failed for %s: %s", ip, exc)
-        return None
-
-    if not isinstance(country, str) or not country:
-        LOGGER.warning("Geolocation API returned no country for %s", ip)
-        return None
-    return country
+API_URL = "http://ip-api.com/batch"
+REQUEST_TIMEOUT = 15
+BATCH_SIZE = 100
 
 
 def _query_ips(database: str) -> Iterable[str]:
@@ -40,10 +23,10 @@ def _query_ips(database: str) -> Iterable[str]:
             "--no-align",
             "--command",
             """
-            SELECT DISTINCT source_ip::text
+            SELECT DISTINCT host(source_ip)
             FROM auth_events
             WHERE source_ip IS NOT NULL
-              AND source_ip::text NOT IN (SELECT source_ip::text FROM ip_country);
+              AND source_ip NOT IN (SELECT source_ip FROM ip_country);
             """,
         ],
         capture_output=True,
@@ -51,6 +34,35 @@ def _query_ips(database: str) -> Iterable[str]:
         check=True,
     )
     return (line.strip() for line in result.stdout.splitlines() if line.strip())
+
+
+def _get_locations(ips: List[str]) -> Dict[str, str]:
+    try:
+        response = requests.post(
+            API_URL,
+            json=[{"query": ip} for ip in ips],
+            params={"fields": "status,message,query,country"},
+            timeout=REQUEST_TIMEOUT,
+        )
+        response.raise_for_status()
+        results = response.json()
+    except (OSError, requests.RequestException, ValueError) as exc:
+        LOGGER.warning("Geolocation batch request failed: %s", exc)
+        return {}
+
+    locations = {}
+    if not isinstance(results, list):
+        LOGGER.warning("Geolocation API returned an invalid batch response")
+        return locations
+    for result in results:
+        if (
+            isinstance(result, dict)
+            and result.get("status") == "success"
+            and isinstance(result.get("query"), str)
+            and isinstance(result.get("country"), str)
+        ):
+            locations[result["query"]] = result["country"]
+    return locations
 
 
 def _save_locations(database: str, locations: Dict[str, str]) -> None:
@@ -74,20 +86,19 @@ def _save_locations(database: str, locations: Dict[str, str]) -> None:
 
 
 def enrich_database() -> None:
-    """Geolocate new source IPs and update the event countries."""
+    """Geolocate new source IPs in batches and update event countries."""
     database = os.environ.get("POSTGRES_DB", "log_analyser")
     locations = {}
     ips = list(_query_ips(database))
     LOGGER.info("Geolocating %d new source IPs", len(ips))
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        requests_by_ip = {executor.submit(get_location, ip): ip for ip in ips}
-        for completed, future in enumerate(as_completed(requests_by_ip), start=1):
-            ip = requests_by_ip[future]
-            country = future.result()
-            if country is not None:
-                locations[ip] = country
-            if completed % 100 == 0 or completed == len(ips):
-                LOGGER.info("Geolocation progress: %d/%d", completed, len(ips))
+    for start in range(0, len(ips), BATCH_SIZE):
+        batch = ips[start : start + BATCH_SIZE]
+        locations.update(_get_locations(batch))
+        LOGGER.info(
+            "Geolocation progress: %d/%d IPs",
+            min(start + BATCH_SIZE, len(ips)),
+            len(ips),
+        )
     _save_locations(database, locations)
     subprocess.run(
         [

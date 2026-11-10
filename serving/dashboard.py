@@ -2,7 +2,6 @@ import logging
 import os
 import subprocess
 from typing import List, Tuple
-from html import escape
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
@@ -25,25 +24,6 @@ def _query(sql: str) -> List[Tuple[str, int]]:
     ]
 
 
-def create_dashboard(output_dir: str = "dashboard") -> None:
-    os.makedirs(output_dir, exist_ok=True)
-    charts = [
-        ("failed_attempts_by_country", "Tentatives échouées par pays", "Pays", "Tentatives"),
-        ("successful_attempts_by_user", "Tentatives réussies par utilisateur", "Utilisateur", "Tentatives"),
-        ("failed_invalid_users_by_user", "Tentatives avec utilisateur invalide", "Utilisateur", "Tentatives"),
-    ]
-    chart_data = {}
-    for view, title, x_label, y_label in charts:
-        try:
-            data = _query(f"SELECT * FROM {view};")
-            chart_data[view] = data
-            _create_chart(output_dir, view, title, x_label, y_label, data)
-        except (OSError, subprocess.CalledProcessError, ValueError):
-            LOGGER.exception("Cannot create chart for %s", view)
-            raise
-    _write_html(output_dir, chart_data)
-
-
 def _create_chart(
     output_dir: str,
     view: str,
@@ -61,16 +41,6 @@ def _create_chart(
     figure.tight_layout()
     figure.savefig(os.path.join(output_dir, f"{view}.png"))
     plt.close(figure)
-
-
-def _table_rows(data: List[Tuple[str, int]]) -> str:
-    if not data:
-        return '<tr><td colspan="2" class="empty">Aucune donnée</td></tr>'
-    return "".join(
-        f"<tr><td>{escape(label)}</td><td>{value:,}</td></tr>"
-        for label, value in data
-    )
-
 
 
 def launch_dashboard_app() -> None:
@@ -121,18 +91,18 @@ def _show_matplotlib_dashboard(
     figure.suptitle(
         "Log Analyser",
         x=0.06,
-        y=0.96,
+        y=0.975,
         ha="left",
         color="#172033",
-        fontsize=24,
+        fontsize=22,
         fontweight="bold",
     )
     figure.text(
         0.06,
-        0.92,
+        0.925,
         "Surveillance des authentifications SSH",
         color="#667085",
-        fontsize=12,
+        fontsize=10,
         ha="left",
     )
 
@@ -142,7 +112,7 @@ def _show_matplotlib_dashboard(
         zip(values, card_titles, card_colors)
     ):
         left = 0.06 + index * 0.30
-        card = figure.add_axes((left, 0.76, 0.27, 0.10))
+        card = figure.add_axes((left, 0.755, 0.27, 0.105))
         card.set_axis_off()
         card.add_patch(
             FancyBboxPatch(
@@ -158,36 +128,36 @@ def _show_matplotlib_dashboard(
         )
         card.text(
             0.07,
-            0.68,
+            0.72,
             title.upper(),
             color="#667085",
-            fontsize=9,
+            fontsize=8,
             fontweight="bold",
             va="center",
         )
         card.text(
             0.07,
-            0.30,
+            0.28,
             f"{sum(count for _, count in rows):,}",
             color=color,
-            fontsize=22,
+            fontsize=21,
             fontweight="bold",
             va="center",
         )
 
     axes = (
-        figure.add_axes((0.06, 0.13, 0.27, 0.54)),
-        figure.add_axes((0.365, 0.13, 0.27, 0.54)),
-        figure.add_axes((0.67, 0.13, 0.27, 0.54)),
+        figure.add_axes((0.06, 0.17, 0.27, 0.51)),
+        figure.add_axes((0.365, 0.17, 0.27, 0.51)),
+        figure.add_axes((0.67, 0.17, 0.27, 0.51)),
     )
     for axis, (title, rows), color in zip(axes, values, card_colors):
         labels = [label for label, _ in rows[:15]]
         counts = [count for _, count in rows[:15]]
         axis.set_facecolor("white")
         axis.bar(labels, counts, color=color, width=0.72)
-        axis.set_title(title, loc="left", color="#172033", fontsize=13, pad=14)
+        axis.set_title(title, loc="left", color="#172033", fontsize=13, pad=12)
         axis.set_ylabel("Tentatives", color="#667085", fontsize=9)
-        axis.tick_params(axis="x", rotation=45, labelsize=8, colors="#475467")
+        axis.tick_params(axis="x", rotation=35, labelsize=7, colors="#475467")
         axis.tick_params(axis="y", labelsize=8, colors="#475467")
         axis.grid(axis="y", alpha=0.25, color="#98a2b3")
         axis.set_axisbelow(True)
@@ -196,9 +166,9 @@ def _show_matplotlib_dashboard(
         axis.margins(x=0.04)
     figure.text(
         0.06,
-        0.06,
+        0.075,
         "Source : journaux SSH analysés depuis PostgreSQL",
         color="#98a2b3",
-        fontsize=9,
+        fontsize=8,
     )
     plt.show()

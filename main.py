@@ -6,7 +6,6 @@ from serving.dashboard import launch_dashboard_app
 
 
 def main() -> None:
-    """Load the logs and open the native desktop dashboard."""
     project_dir = os.path.dirname(os.path.abspath(__file__))
     data_dir = os.path.join(project_dir, "data")
     configure_logging()
